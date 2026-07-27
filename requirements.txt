@@ -11,9 +11,11 @@ pillow==12.3.0
 pycparser==3.0
 pypdf==6.14.2
 pypdfium2==5.12.1
+python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 requests==2.34.2
 sgmllib3k==1.0.0
+six==1.17.0
 soupsieve==2.9.1
 typing_extensions==4.16.0
 urllib3==2.7.0

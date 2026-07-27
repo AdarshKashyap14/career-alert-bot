@@ -1,15 +1,12 @@
 import requests
-import urllib3
 
 from bs4 import BeautifulSoup
+
 from urllib.parse import urljoin
 
 from psu_sources import PSU_SOURCES
 
-
-urllib3.disable_warnings(
-    urllib3.exceptions.InsecureRequestWarning
-)
+from date_filter import is_recent
 
 
 
@@ -17,91 +14,60 @@ def fetch_jobs():
 
     jobs = []
 
-    seen = set()
-
 
     headers = {
+
         "User-Agent":
         "Mozilla/5.0"
+
     }
 
 
-    remove_words = [
+
+    ignore_words = [
 
         "home",
         "about",
         "contact",
+        "login",
+        "privacy",
+        "sitemap",
+        "facebook",
+        "twitter",
+        "youtube",
+        "quality",
+        "products",
+        "technology",
+        "research",
         "policy",
         "terms",
-        "sitemap",
-        "quality",
-        "manufacturing",
-        "products",
-        "software products",
-        "software services",
-        "research development",
-        "r&d awards",
-        "press",
-        "twitter",
-        "facebook",
-        "youtube",
-        "admit card",
-        "shortlist",
         "result",
-        "answer key",
-        "interview schedule",
-        "notice",
+        "interview",
+        "shortlist",
+        "schedule",
         "closure",
-        "competition",
-        "award",
-        "regarding",
-"change of",
-"jurisdiction",
-"region",
+        "appointment"
 
     ]
 
 
-    job_words = [
 
-        "career",
-        "careers",
+    keywords = [
+
         "recruit",
+        "advert",
         "vacancy",
-        "vacancies",
-        "job",
-        "opening",
-        "opportunity",
-        "scientist",
+        "notification",
         "engineer",
-        "technical assistant",
-        "project engineer",
-        "research scientist",
-        "jrf",
-        "apprentice",
-        "trainee"
-
-    ]
-
-
-    cse_words = [
-
-        "computer",
-        "computer science",
-        "cse",
-        "software",
-        "information technology",
-        "it",
-        "data",
-        "ai",
-        "machine learning",
-        "cyber",
-        "network",
-        "programmer",
-        "developer",
-        "technical officer",
         "scientist",
-        "engineer"
+        "trainee",
+        "fellow",
+        "apprentice",
+        "assistant",
+        "officer",
+        "junior",
+        "associate",
+        "project"
 
     ]
 
@@ -110,12 +76,13 @@ def fetch_jobs():
     for source in PSU_SOURCES:
 
 
-        try:
+        print(
+            "Checking:",
+            source["name"]
+        )
 
-            print(
-                "Checking:",
-                source["name"]
-            )
+
+        try:
 
 
             response = requests.get(
@@ -141,39 +108,43 @@ def fetch_jobs():
 
 
 
-            for a in soup.find_all("a"):
+            found = 0
 
 
-                title = a.get_text(
+
+            for link in soup.find_all("a"):
+
+
+                title = link.get_text(
+
                     " ",
+
                     strip=True
+
                 )
 
 
-                href = a.get("href")
+                href = link.get("href")
+
 
 
                 if not title or not href:
+
                     continue
 
 
 
-                title = " ".join(
-                    title.split()
-                )
-
-
-                lower = title.lower()
+                title_lower = title.lower()
 
 
 
-                # remove useless pages
+                # remove useless links
 
                 if any(
 
-                    x in lower
+                    word in title_lower
 
-                    for x in remove_words
+                    for word in ignore_words
 
                 ):
 
@@ -181,27 +152,14 @@ def fetch_jobs():
 
 
 
-                # must look like recruitment
+
+                # only recruitment pages
 
                 if not any(
 
-                    x in lower
+                    word in title_lower
 
-                    for x in job_words
-
-                ):
-
-                    continue
-
-
-
-                # CSE relevance
-
-                if not any(
-
-                    x in lower
-
-                    for x in cse_words
+                    for word in keywords
 
                 ):
 
@@ -209,7 +167,25 @@ def fetch_jobs():
 
 
 
-                url = urljoin(
+
+                # check only last 5 days
+
+                if not is_recent(title):
+
+                    print(
+
+                        "Skipping old/no date:",
+
+                        title[:80]
+
+                    )
+
+                    continue
+
+
+
+
+                full_url = urljoin(
 
                     source["url"],
 
@@ -219,23 +195,45 @@ def fetch_jobs():
 
 
 
-                if url in seen:
-                    continue
-
-
-                seen.add(url)
-
-
-
-                jobs.append({
+                job = {
 
                     "title": title,
 
-                    "link": url,
+                    "link": full_url,
 
                     "source": source["name"]
 
-                })
+                }
+
+
+
+                jobs.append(job)
+
+
+                found += 1
+
+
+                print(
+
+                    "Added:",
+
+                    title[:80]
+
+                )
+
+
+
+
+            print(
+
+                source["name"],
+
+                "recent jobs:",
+
+                found
+
+            )
+
 
 
 
@@ -248,49 +246,10 @@ def fetch_jobs():
 
                 "skipped:",
 
-                str(e)[:100]
+                e
 
             )
 
 
+
     return jobs
-
-
-
-
-
-if __name__ == "__main__":
-
-
-    jobs = fetch_jobs()
-
-
-    print("\n")
-
-    print(
-        "FINAL CSE PSU JOBS"
-    )
-
-
-    print(
-        "Total:",
-        len(jobs)
-    )
-
-
-    for job in jobs:
-
-
-        print("----------------")
-
-        print(
-            job["title"]
-        )
-
-        print(
-            job["source"]
-        )
-
-        print(
-            job["link"]
-        )

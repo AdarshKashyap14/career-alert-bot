@@ -22,7 +22,7 @@ PSU_SOURCES = [
 
     {
         "name": "NTPC",
-        "url": "https://careers.ntpc.co.in/"
+        "url": "https://careers.ntpc.co.in/recruitment/"
     },
 
     {
@@ -38,6 +38,83 @@ PSU_SOURCES = [
     {
         "name": "C-DAC",
         "url": "https://www.cdac.in/index.aspx?id=job"
+    },
+
+
+    {
+        "name": "HAL",
+        "url": "https://hal-india.co.in/careers"
+    },
+
+    {
+        "name": "ECIL",
+        "url": "https://www.ecil.co.in/jobs"
+    },
+
+
+    {
+        "name": "NPCIL",
+        "url": "https://npcilcareers.co.in/"
+    },
+
+
+    {
+        "name": "IOCL",
+        "url": "https://iocl.com/latest-job-opening"
+    },
+
+
+    {
+        "name": "HPCL",
+        "url": "https://hindustanpetroleum.com/careers"
+    },
+
+
+    {
+        "name": "BPCL",
+        "url": "https://www.bharatpetroleum.in/careers"
+    },
+
+
+    {
+        "name": "GAIL",
+        "url": "https://gailonline.com/home.html"
+    },
+
+
+    {
+        "name": "SAIL",
+        "url": "https://sailcareers.com/"
+    },
+
+
+    {
+        "name": "Coal India",
+        "url": "https://www.coalindia.in/career-cil/"
+    },
+
+
+    {
+        "name": "NALCO",
+        "url": "https://nalcoindia.com/career/"
+    },
+
+
+    {
+        "name": "AAI",
+        "url": "https://www.aai.aero/en/careers"
+    },
+
+
+    {
+        "name": "CSIR",
+        "url": "https://www.csir.res.in/career-opportunities"
+    },
+
+
+    {
+        "name": "NIC",
+        "url": "https://www.nic.in/careers/"
     }
 
 ]
