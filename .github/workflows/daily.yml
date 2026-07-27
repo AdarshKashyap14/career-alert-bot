@@ -1,35 +1,58 @@
 name: Daily Career Alert
 
+
 on:
+
   schedule:
-    - cron: "30 0 * * *"
+
+    - cron: "30 3 * * *"
 
   workflow_dispatch:
 
 
+
 jobs:
+
   run-bot:
 
     runs-on: ubuntu-latest
 
+
     steps:
 
+
     - name: Checkout repository
+
       uses: actions/checkout@v4
 
+
+
     - name: Setup Python
+
       uses: actions/setup-python@v5
+
       with:
-        python-version: "3.12"
+
+        python-version: "3.11"
+
+
 
     - name: Install dependencies
+
       run: |
+
         pip install -r requirements.txt
 
+
+
     - name: Run Career Alert Bot
+
       env:
+
         BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+
         CHAT_ID: ${{ secrets.CHAT_ID }}
 
       run: |
+
         python main.py
