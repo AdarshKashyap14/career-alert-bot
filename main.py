@@ -1,22 +1,83 @@
 from fetch_jobs import fetch_jobs
-from filters import is_cse_govt_job
-from pdf_finder import find_pdf_link
-from pdf_reader import check_pdf_for_cse
+from pdf_checker import check_pdf
 from telegram_bot import send_message
 
-jobs = fetch_jobs()
 
 
-print("Final CSE PSU Jobs\n")
+def find_pdf_link(url):
+
+    import requests
+
+    from bs4 import BeautifulSoup
+    from urllib.parse import urljoin
 
 
-count = 0
+    try:
+
+        response = requests.get(
+            url,
+            timeout=20,
+            verify=False
+        )
 
 
-for job in jobs:
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
 
 
-    if is_cse_govt_job(job):
+        for a in soup.find_all("a"):
+
+
+            href = a.get("href")
+
+
+            if href and ".pdf" in href.lower():
+
+                return urljoin(
+                    url,
+                    href
+                )
+
+
+    except Exception as e:
+
+        print(
+            "PDF search error:",
+            e
+        )
+
+
+    return None
+
+
+
+
+def main():
+
+
+    jobs = fetch_jobs()
+
+
+    print("\n")
+
+    print(
+        "Checking CSE eligibility..."
+    )
+
+
+    matched = []
+
+
+
+    for job in jobs:
+
+
+        print(
+            "Checking:",
+            job["title"][:60]
+        )
 
 
         pdf = find_pdf_link(
@@ -24,43 +85,83 @@ for job in jobs:
         )
 
 
-        if pdf:
+        if not pdf:
+
+            continue
 
 
-            eligible = check_pdf_for_cse(pdf)
+
+        eligible = check_pdf(
+            pdf
+        )
 
 
-            if eligible:
-
-                count += 1
-message = "🚀 Daily CSE PSU Job Alert\n\n"
-
-count = 0
+        if eligible:
 
 
-for job in jobs:
+            matched.append({
 
-    if is_cse_govt_job(job):
+                "title": job["title"],
 
-        pdf = find_pdf_link(job["link"])
+                "source": job["source"],
+
+                "link": job["link"],
+
+                "pdf": pdf
+
+            })
 
 
-        if pdf and check_pdf_for_cse(pdf):
 
-            count += 1
+    print("\n")
+
+    print(
+        "Final CSE Eligible:",
+        len(matched)
+    )
+
+
+
+    if matched:
+
+
+        message = (
+            "🚀 CSE PSU JOB ALERT\n\n"
+        )
+
+
+        for job in matched:
+
 
             message += (
-                "🏢 PSU: ISRO\n"
-                f"📌 {job['title']}\n"
-                f"🔗 {job['link']}\n\n"
+
+                "🏢 "
+                + job["source"]
+                + "\n\n"
+
+                "📌 "
+                + job["title"]
+                + "\n\n"
+
+                "🔗 Apply:\n"
+                + job["link"]
+                + "\n\n"
+
+                "📄 Notification PDF:\n"
+                + job["pdf"]
+                + "\n\n"
+
+                "-------------------\n"
+
             )
 
 
-message += f"Total Jobs: {count}"
+        send_message(
+            message
+        )
 
 
-send_message(message)
 
+if __name__ == "__main__":
 
-
-print("\nTotal CSE Eligible:", count)
+    main()

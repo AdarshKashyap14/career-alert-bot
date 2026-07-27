@@ -1,128 +1,296 @@
 import requests
+import urllib3
+
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+from psu_sources import PSU_SOURCES
 
-PSU_SOURCES = [
-    {
-        "name": "ISRO",
-        "url": "https://www.isro.gov.in/Careers.html"
-    },
-    {
-        "name": "DRDO",
-        "url": "https://drdo.gov.in/drdo/en/offerings/vacancies"
-    }
-]
+
+urllib3.disable_warnings(
+    urllib3.exceptions.InsecureRequestWarning
+)
+
 
 
 def fetch_jobs():
 
     jobs = []
 
+    seen = set()
+
+
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent":
+        "Mozilla/5.0"
     }
+
+
+    remove_words = [
+
+        "home",
+        "about",
+        "contact",
+        "policy",
+        "terms",
+        "sitemap",
+        "quality",
+        "manufacturing",
+        "products",
+        "software products",
+        "software services",
+        "research development",
+        "r&d awards",
+        "press",
+        "twitter",
+        "facebook",
+        "youtube",
+        "admit card",
+        "shortlist",
+        "result",
+        "answer key",
+        "interview schedule",
+        "notice",
+        "closure",
+        "competition",
+        "award",
+        "regarding",
+"change of",
+"jurisdiction",
+"region",
+
+    ]
+
+
+    job_words = [
+
+        "career",
+        "careers",
+        "recruit",
+        "vacancy",
+        "vacancies",
+        "job",
+        "opening",
+        "opportunity",
+        "scientist",
+        "engineer",
+        "technical assistant",
+        "project engineer",
+        "research scientist",
+        "jrf",
+        "apprentice",
+        "trainee"
+
+    ]
+
+
+    cse_words = [
+
+        "computer",
+        "computer science",
+        "cse",
+        "software",
+        "information technology",
+        "it",
+        "data",
+        "ai",
+        "machine learning",
+        "cyber",
+        "network",
+        "programmer",
+        "developer",
+        "technical officer",
+        "scientist",
+        "engineer"
+
+    ]
+
 
 
     for source in PSU_SOURCES:
 
+
         try:
 
+            print(
+                "Checking:",
+                source["name"]
+            )
+
+
             response = requests.get(
+
                 source["url"],
+
                 headers=headers,
-                timeout=15
+
+                timeout=20,
+
+                verify=False
+
             )
 
 
             soup = BeautifulSoup(
+
                 response.text,
+
                 "html.parser"
+
             )
 
 
-            for link in soup.find_all("a"):
 
-                title = link.get_text(
+            for a in soup.find_all("a"):
+
+
+                title = a.get_text(
                     " ",
                     strip=True
                 )
 
-                href = link.get("href")
+
+                href = a.get("href")
 
 
                 if not title or not href:
                     continue
 
 
-                # Remove useless navigation links
-                ignore = [
-                    "home",
-                    "english",
-                    "hindi",
-                    "about",
-                    "contact",
-                    "team",
-                    "technology",
-                    "products",
-                    "publications",
-                    "photos",
-                    "videos",
-                    "conference",
-                    "here"
-                ]
 
+                title = " ".join(
+                    title.split()
+                )
+
+
+                lower = title.lower()
+
+
+
+                # remove useless pages
 
                 if any(
-                    word in title.lower()
-                    for word in ignore
+
+                    x in lower
+
+                    for x in remove_words
+
                 ):
+
                     continue
 
 
-                # Keep only recruitment related pages
-                keywords = [
-                    "recruit",
-                    "scientist",
-                    "engineer",
-                    "trainee",
-                    "assistant",
-                    "officer",
-                    "fellow",
-                    "vacanc",
-                    "apprentice"
-                ]
 
+                # must look like recruitment
 
                 if not any(
-                    word in title.lower()
-                    for word in keywords
+
+                    x in lower
+
+                    for x in job_words
+
                 ):
+
                     continue
 
 
-                full_url = urljoin(
+
+                # CSE relevance
+
+                if not any(
+
+                    x in lower
+
+                    for x in cse_words
+
+                ):
+
+                    continue
+
+
+
+                url = urljoin(
+
                     source["url"],
+
                     href
+
                 )
 
 
-                jobs.append(
-                    {
-                        "title": title,
-                        "link": full_url,
-                        "description": source["name"]
-                    }
-                )
+
+                if url in seen:
+                    continue
+
+
+                seen.add(url)
+
+
+
+                jobs.append({
+
+                    "title": title,
+
+                    "link": url,
+
+                    "source": source["name"]
+
+                })
+
 
 
         except Exception as e:
 
+
             print(
+
                 source["name"],
-                "error:",
-                e
+
+                "skipped:",
+
+                str(e)[:100]
+
             )
 
 
     return jobs
+
+
+
+
+
+if __name__ == "__main__":
+
+
+    jobs = fetch_jobs()
+
+
+    print("\n")
+
+    print(
+        "FINAL CSE PSU JOBS"
+    )
+
+
+    print(
+        "Total:",
+        len(jobs)
+    )
+
+
+    for job in jobs:
+
+
+        print("----------------")
+
+        print(
+            job["title"]
+        )
+
+        print(
+            job["source"]
+        )
+
+        print(
+            job["link"]
+        )
