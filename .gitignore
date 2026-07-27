@@ -1,0 +1,9 @@
+venv/
+.env
+__pycache__/
+*.pyc
+data/sent_jobs.jsonvenv/
+.env
+__pycache__/
+*.pyc
+data/sent_jobs.json
