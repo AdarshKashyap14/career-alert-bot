@@ -1,3 +1,11 @@
-BOT_TOKEN = "8265510026:AAH8RPtjANd2ZxSoi6x-0AlE79cOW8c7lJk"
+import os
 
-CHAT_ID = "923401280"
+
+BOT_TOKEN = os.getenv(
+    "BOT_TOKEN"
+)
+
+
+CHAT_ID = os.getenv(
+    "CHAT_ID"
+)

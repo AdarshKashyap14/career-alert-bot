@@ -1,13 +1,12 @@
 from fetch_jobs import fetch_jobs
 from pdf_checker import check_pdf
 from telegram_bot import send_message
-
+from history import is_new_job, add_job
 
 
 def find_pdf_link(url):
 
     import requests
-
     from bs4 import BeautifulSoup
     from urllib.parse import urljoin
 
@@ -28,7 +27,6 @@ def find_pdf_link(url):
 
 
         for a in soup.find_all("a"):
-
 
             href = a.get("href")
 
@@ -60,11 +58,7 @@ def main():
     jobs = fetch_jobs()
 
 
-    print("\n")
-
-    print(
-        "Checking CSE eligibility..."
-    )
+    print("\nChecking CSE eligibility...\n")
 
 
     matched = []
@@ -76,8 +70,20 @@ def main():
 
         print(
             "Checking:",
-            job["title"][:60]
+            job["title"][:70]
         )
+
+
+        # Skip already sent jobs
+
+        if not is_new_job(job["link"]):
+
+            print(
+                "Already sent - skipping"
+            )
+
+            continue
+
 
 
         pdf = find_pdf_link(
@@ -94,6 +100,7 @@ def main():
         eligible = check_pdf(
             pdf
         )
+
 
 
         if eligible:
@@ -116,49 +123,72 @@ def main():
     print("\n")
 
     print(
-        "Final CSE Eligible:",
+        "New CSE Eligible Jobs:",
         len(matched)
     )
 
 
 
-    if matched:
+    if len(matched) == 0:
+
+        print(
+            "No new jobs found"
+        )
+
+        return
 
 
-        message = (
-            "🚀 CSE PSU JOB ALERT\n\n"
+
+    message = (
+
+        "🚀 CSE PSU JOB ALERT\n\n"
+
+    )
+
+
+
+    for job in matched:
+
+
+        message += (
+
+            "🏢 "
+            + job["source"]
+            + "\n\n"
+
+            "📌 "
+            + job["title"]
+            + "\n\n"
+
+            "🔗 Apply:\n"
+            + job["link"]
+            + "\n\n"
+
+            "📄 Notification PDF:\n"
+            + job["pdf"]
+            + "\n\n"
+
+            "-------------------\n"
+
         )
 
 
-        for job in matched:
+
+    send_message(
+        message
+    )
 
 
-            message += (
 
-                "🏢 "
-                + job["source"]
-                + "\n\n"
+    # Save sent jobs
 
-                "📌 "
-                + job["title"]
-                + "\n\n"
+    for job in matched:
 
-                "🔗 Apply:\n"
-                + job["link"]
-                + "\n\n"
-
-                "📄 Notification PDF:\n"
-                + job["pdf"]
-                + "\n\n"
-
-                "-------------------\n"
-
-            )
-
-
-        send_message(
-            message
+        add_job(
+            job["link"]
         )
+
+
 
 
 
